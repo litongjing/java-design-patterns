@@ -47,6 +47,7 @@ public class Fruit {
   /**
    * toString method
    */
+  @Override
   public String toString() {
     switch (type) {
       case ORANGE:

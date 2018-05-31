@@ -61,6 +61,7 @@ public class Customer extends Thread {
    * The Customer repeatedly takes Fruit from the FruitShop until no Fruit
    * remains.
    */   
+  @Override
   public void run() {
         
     while (fruitShop.countFruit() > 0) {

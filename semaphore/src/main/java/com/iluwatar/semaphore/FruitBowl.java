@@ -64,6 +64,7 @@ public class FruitBowl {
   /**
    * toString method
    */   
+  @Override
   public String toString() {
     int apples = 0;
     int oranges = 0;

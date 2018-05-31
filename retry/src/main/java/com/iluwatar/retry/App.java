@@ -68,9 +68,13 @@ public final class App {
    * @throws Exception not expected
    */
   public static void main(String[] args) throws Exception {
+    System.out.println("^^^^^^^^^^^^^^^^^^^^^^^^");
     noErrors();
+    System.out.println("^^^^^^^^^^^^^^^^^^^^^^^^");
     errorNoRetry();
+    System.out.println("^^^^^^^^^^^^^^^^^^^^^^^^");
     errorWithRetry();
+    System.out.println("^^^^^^^^^^^^^^^^^^^^^^^^");
   }
 
   private static void noErrors() throws Exception {
@@ -91,7 +95,7 @@ public final class App {
   private static void errorWithRetry() throws Exception {
     final Retry<String> retry = new Retry<>(
         new FindCustomer("123", new CustomerNotFoundException("not found")),
-        3,  //3 attempts
+        4,  //3 attempts
         100, //100 ms delay between attempts
         e -> CustomerNotFoundException.class.isAssignableFrom(e.getClass())
     );

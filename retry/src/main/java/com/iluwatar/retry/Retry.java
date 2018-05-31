@@ -24,87 +24,91 @@
 
 package com.iluwatar.retry;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import com.google.common.collect.Lists;
+import com.sun.org.apache.xpath.internal.axes.PredicatedNodeTest;
+
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Predicate;
 
 /**
  * Decorates {@link BusinessOperation business operation} with "retry" capabilities.
  *
- * @author George Aristy (george.aristy@gmail.com)
  * @param <T> the remote op's return type
+ * @author George Aristy (george.aristy@gmail.com)
  */
 public final class Retry<T> implements BusinessOperation<T> {
-  private final BusinessOperation<T> op;
-  private final int maxAttempts;
-  private final long delay;
-  private final AtomicInteger attempts;
-  private final Predicate<Exception> test;
-  private final List<Exception> errors;
+    private final BusinessOperation<T> op;
+    private final int maxAttempts;
+    private final long delay;
+    private final AtomicInteger attempts;
+    private final Predicate<Exception> test;
+    private final List<Exception> errors;
 
-  /**
-   * Ctor.
-   * 
-   * @param op the {@link BusinessOperation} to retry
-   * @param maxAttempts number of times to retry
-   * @param delay delay (in milliseconds) between attempts
-   * @param ignoreTests tests to check whether the remote exception can be ignored. No exceptions
-   *     will be ignored if no tests are given
-   */
-  @SafeVarargs
-  public Retry(
-      BusinessOperation<T> op, 
-      int maxAttempts, 
-      long delay, 
-      Predicate<Exception>... ignoreTests
-  ) {
-    this.op = op;
-    this.maxAttempts = maxAttempts;
-    this.delay = delay;
-    this.attempts = new AtomicInteger();
-    this.test = Arrays.stream(ignoreTests).reduce(Predicate::or).orElse(e -> false);
-    this.errors = new ArrayList<>();
-  }
+    /**
+     * Ctor.
+     *
+     * @param op          the {@link BusinessOperation} to retry
+     * @param maxAttempts number of times to retry
+     * @param delay       delay (in milliseconds) between attempts
+     * @param ignoreTests tests to check whether the remote exception can be ignored. No exceptions
+     *                    will be ignored if no tests are given
+     */
+    @SafeVarargs
+    public Retry(
+            BusinessOperation<T> op,
+            int maxAttempts,
+            long delay,
+            Predicate<Exception>... ignoreTests
+    ) {
+        this.op = op;
+        this.maxAttempts = maxAttempts;
+        this.delay = delay;
+        this.attempts = new AtomicInteger();
+        //predicate 或判断
+        this.test = Arrays.stream(ignoreTests).reduce(Predicate::or).orElse(e -> false);
+//    this.test=Arrays.stream(ignoreTests).reduce((x,y)->x.or(y)).orElse(e->false);
+        this.errors = new ArrayList<>();
+    }
 
-  /**
-   * The errors encountered while retrying, in the encounter order.
-   * 
-   * @return the errors encountered while retrying
-   */
-  public List<Exception> errors() {
-    return Collections.unmodifiableList(this.errors);
-  }
+    /**
+     * The errors encountered while retrying, in the encounter order.
+     *
+     * @return the errors encountered while retrying
+     */
+    public List<Exception> errors() {
+        return Collections.unmodifiableList(this.errors);
+    }
 
-  /**
-   * The number of retries performed.
-   * 
-   * @return the number of retries performed
-   */
-  public int attempts() {
-    return this.attempts.intValue();
-  }
+    /**
+     * The number of retries performed.
+     *
+     * @return the number of retries performed
+     */
+    public int attempts() {
+        return this.attempts.intValue();
+    }
 
-  @Override
-  public T perform() throws BusinessException {
-    do {
-      try {
-        return this.op.perform();
-      } catch (BusinessException e) {
-        this.errors.add(e);
-        
-        if (this.attempts.incrementAndGet() >= this.maxAttempts || !this.test.test(e)) {
-          throw e;
-        }
+    @Override
+    public T perform() throws BusinessException {
+        do {
+            System.out.println("...retry");
+            try {
+                return this.op.perform();
+            } catch (BusinessException e) {
+                this.errors.add(e);
+                //++
+                if (this.attempts.incrementAndGet() >= this.maxAttempts || !this.test.test(e)) {
+                    throw e;
+                }
 
-        try {
-          Thread.sleep(this.delay);
-        } catch (InterruptedException f) {
-          //ignore
-        }
-      }
-    } while (true);
-  }
+                try {
+                    Thread.sleep(this.delay);
+                } catch (InterruptedException f) {
+                    //ignore
+                }
+            }
+
+        } while (true);
+    }
 }
